@@ -1,10 +1,10 @@
-NAME = ft_ping
+NAME 	= ft_ping
 
 CC		= cc
 
 CFLAGS	= -Wall -Wextra -Werror -g
 
-SRC 	= srcs/main.c srcs/check_ip.c
+SRC 	= srcs/main.c srcs/check_ip.c srcs/utils.c srcs/signal.c
 
 OBJ_DIR = objs
 
