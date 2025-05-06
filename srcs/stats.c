@@ -32,7 +32,7 @@ void	print_stats(t_ping *ping, int set)
 	else if (set == 1)
 	{
 		if (stats.ip_name == NULL)
-			stats.ip_name = ping->ip_name;
+			stats.ip_name = ping->ipstr;
 		stats.packets_sent++;
 	}
 	else if (set == 2)

@@ -20,7 +20,7 @@ unsigned	short	checksum(void *b, int len)
 
 int	send_icmp(int sockfd, t_ping *ping)
 {
-	char			packet[64];
+	char			packet[ping->size];
 	struct icmphdr	*icmp;
 
 	icmp = (struct icmphdr *)packet;
@@ -69,25 +69,30 @@ int	recv_icmp(int sockfd, t_ping *ping)
 	icmp_header = (struct icmphdr *)(buffer + (ip_header->ihl * 4));
 	if (icmp_header->type == ICMP_ECHOREPLY)
 	{
-		printf("64 bytes from %s: icmp_seq=%d ttl=%d time=%.2f ms\n",
-			ping->usable_ip, icmp_header->un.echo.sequence, ping->ttl,
-			((double) ping->time_of_wait / CLOCKS_PER_SEC) * 1000);
+		if (icmp_header->un.echo.id == (getpid() & 0xFFFF))
+		{
+			printf("%d bytes from %s: icmp_seq=%d ttl=%d time=%.2f ms\n",
+				bytes_received, ping->ipstr, icmp_header->un.echo.sequence,
+				ping->ttl, ((double)(ping->time_of_wait) / CLOCKS_PER_SEC) * 1000);
+		}
+		else
+			printf("ICMP ECHO REPLY from %s: icmp_seq=%d\n", ping->ipstr, icmp_header->un.echo.sequence);
 	}
 	else
-		printf("Received unexpected ICMP packet\n");
+		printf("ICMP ERROR from %s: type=%d code=%d\n", ping->ipstr, icmp_header->type, icmp_header->code);
 	return (0);
 }
 
 int	main(int ac, char **av)
 {
 	t_ping	*ping;
+	struct addrinfo	hints;
+	struct addrinfo	*res;
 	int		sockfd;
 
 	if (ac < 2)
 		return (printf("ft_ping: usage error: Adresse de destination requise\n"));
-	if (check_ip(av[1]))
-		return (1);
-	signal_handler();
+
 	ping = malloc(sizeof(t_ping));
 	if (!ping)
 	{
@@ -95,20 +100,50 @@ int	main(int ac, char **av)
 		return (1);
 	}
 	memset(ping, 0, sizeof(t_ping));
-	init_ping_struct(ping, av[1]);
+	init_ping_struct(ping);
+	if (defined_allarg(ping, av, ac))
+	{
+		free_ping_struct(ping);
+		return (1);
+	}
+	defined_allopt(ping);
+	if (inet_pton(AF_INET, ping->ipstr, &ping->ip.sin_addr) <= 0)
+	{
+		memset(&hints, 0, sizeof(hints));
+		hints.ai_family = AF_INET;
+		hints.ai_socktype = SOCK_RAW;
+		if (getaddrinfo(ping->ipstr, NULL, &hints, &res) != 0)
+		{
+			printf("ft_ping: %s: Unknown host\n", ping->ipstr);
+			free_ping_struct(ping);
+			return (1);
+		}
+		memcpy(&ping->ip.sin_addr, &((struct sockaddr_in *)res->ai_addr)->sin_addr, sizeof(struct in_addr));
+		freeaddrinfo(res);
+	}
+
 	sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
 	if (sockfd < 0)
 	{
-		free(ping);
+		free_ping_struct(ping);
 		perror("socket");
 		return (1);
 	}
-	printf("FT_PING: %s (%s) 56(84) bytes of data.\n", ping->ip_name, ping->usable_ip);
+
+	printf("PING %s (%s) %d bytes of data\n", ping->ipstr, ping->ipstr, ping->size);
+	signal_handler();
 	print_stats(ping, 3);
 	while (g_run)
 	{
-		send_icmp(sockfd, ping);
-		recv_icmp(sockfd, ping);
+		if (ping->arg->is_c[0] > 0 && ping->arg->is_c[1] == ping->seq)
+		{
+			print_stats(ping, 0);
+			break;
+		}
+		if (send_icmp(sockfd, ping))
+			break;
+		if (recv_icmp(sockfd, ping))
+			break;
 		sleep(1);
 	}
 	close(sockfd);

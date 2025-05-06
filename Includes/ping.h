@@ -20,14 +20,25 @@
 
 extern int	g_run;
 
+typedef struct s_typearg
+{
+	int		is_v;  // verbose mode
+	int		is_f;  // flood mode without waiting
+	int		is_w[2]; // deadline
+	int		is_c[2]; // total packets
+	int		is_l[2]; // preload size of packets
+	int		is_s[2]; // size of packets
+}	t_typearg;
+
 typedef struct s_ping
 {
+	char				ipstr[INET_ADDRSTRLEN];
 	struct sockaddr_in	ip;
-	char				*ip_name;
-	char				*usable_ip;
+	t_typearg			*arg;
 	int					seq;
 	pid_t				pid;
 	int					ttl;
+	int					size;
 	clock_t				time_of_send;
 	clock_t				time_of_recv;
 	clock_t				time_of_wait;
@@ -44,12 +55,13 @@ typedef struct s_stats
 	double	rtt_mdev;
 }	t_stats;
 
-int		check_ip(char *ip);
-void	init_ping_struct(t_ping *ping, char *ip);
+void	init_ping_struct(t_ping *ping);
 char	*ft_substr(char const *s, unsigned int start, size_t len);
 void	signal_handler(void);
 void	print_stats(t_ping *ping, int set);
 void	free_ping_struct(t_ping *ping);
+int		defined_allarg(t_ping *ping, char **av, int ac);
+void	defined_allopt(t_ping *ping);
 char	*ft_itoa(int n);
 
 #endif

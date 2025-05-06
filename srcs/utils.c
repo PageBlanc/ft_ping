@@ -130,15 +130,16 @@ char	*setusable_ip(char *ip)
 	return (alloc_ip);
 }
 
-void	init_ping_struct(t_ping *ping, char *ip)
+void	init_ping_struct(t_ping *ping)
 {
-	ping->ip_name = ip;
-	ping->usable_ip = setusable_ip(ip);
+	ping->arg = NULL;
+	memset(ping->ipstr, 0, INET_ADDRSTRLEN);
 	ping->ip.sin_family = AF_INET;
-	ping->ip.sin_addr.s_addr = inet_addr(ip);
+	ping->ip.sin_addr.s_addr = 0;	
 	ping->seq = 0;
 	ping->pid = getpid();
-	ping->ttl = 58;
+	ping->ttl = 56;
+	ping->size = 56;
 	ping->time_of_send = 0;
 	ping->time_of_recv = 0;
 	ping->time_of_wait = 0;
@@ -146,7 +147,10 @@ void	init_ping_struct(t_ping *ping, char *ip)
 
 void	free_ping_struct(t_ping *ping)
 {
-	if (ping->usable_ip)
-		free(ping->usable_ip);
+	if (ping->arg)
+	{
+		free(ping->arg);
+		ping->arg = NULL;
+	}
 	free(ping);
 }
