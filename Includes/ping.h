@@ -16,6 +16,7 @@
 # include <time.h>
 # include <sys/time.h>
 # include <errno.h>
+# include <math.h>
 
 extern int	g_run;
 
@@ -27,7 +28,21 @@ typedef struct s_ping
 	int					seq;
 	pid_t				pid;
 	int					ttl;
+	clock_t				time_of_send;
+	clock_t				time_of_recv;
+	clock_t				time_of_wait;
 }	t_ping;
+
+typedef struct s_stats
+{
+	char	*ip_name;
+	int		packets_sent;
+	int		packets_received;
+	double	rtt_min;
+	double	rtt_avg;
+	double	rtt_max;
+	double	rtt_mdev;
+}	t_stats;
 
 int		check_ip(char *ip);
 void	init_ping_struct(t_ping *ping, char *ip);

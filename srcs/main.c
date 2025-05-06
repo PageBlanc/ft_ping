@@ -32,6 +32,7 @@ int	send_icmp(int sockfd, t_ping *ping)
 	icmp->checksum = 0;
 	icmp->checksum = checksum(icmp, sizeof(packet));
 	setsockopt(sockfd, IPPROTO_IP, IP_TTL, &ping->ttl, sizeof(ping->ttl));
+	ping->time_of_send = clock();
 	if (sendto(sockfd, packet, sizeof(packet), 0, (struct sockaddr *) &ping->ip, sizeof(ping->ip)) <= 0)
 	{
 		perror("sendto");
@@ -61,6 +62,8 @@ int	recv_icmp(int sockfd, t_ping *ping)
 		perror("recvmsg");
 		return (1);
 	}
+	ping->time_of_recv = clock();
+	ping->time_of_wait = ping->time_of_recv - ping->time_of_send;
 	print_stats(ping, 2);
 	ip_header = (struct iphdr *) buffer;
 	icmp_header = (struct icmphdr *)(buffer + (ip_header->ihl * 4));
@@ -68,7 +71,7 @@ int	recv_icmp(int sockfd, t_ping *ping)
 	{
 		printf("64 bytes from %s: icmp_seq=%d ttl=%d time=%.2f ms\n",
 			ping->usable_ip, icmp_header->un.echo.sequence, ping->ttl,
-			(double)(clock() - ping->seq) / CLOCKS_PER_SEC * 1000);
+			((double) ping->time_of_wait / CLOCKS_PER_SEC) * 1000);
 	}
 	else
 		printf("Received unexpected ICMP packet\n");

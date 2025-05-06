@@ -13,7 +13,7 @@ OBJ 	= $(SRC:srcs/%.c=$(OBJ_DIR)/%.o)
 all: $(NAME)
 
 $(NAME): $(OBJ)
-	$(CC) $(CFLAGS) $(OBJ) -o $(NAME)
+	$(CC) $(CFLAGS) $(OBJ) -o $(NAME) -lm
 
 $(OBJ_DIR)/%.o: srcs/%.c | $(OBJ_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@

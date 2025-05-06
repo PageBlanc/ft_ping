@@ -139,6 +139,9 @@ void	init_ping_struct(t_ping *ping, char *ip)
 	ping->seq = 0;
 	ping->pid = getpid();
 	ping->ttl = 58;
+	ping->time_of_send = 0;
+	ping->time_of_recv = 0;
+	ping->time_of_wait = 0;
 }
 
 void	free_ping_struct(t_ping *ping)
