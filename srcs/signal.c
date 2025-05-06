@@ -3,6 +3,7 @@
 void	handler(int signum)
 {
 	(void) signum;
+	print_stats(NULL, 0);
 	g_run = 0;
 }
 

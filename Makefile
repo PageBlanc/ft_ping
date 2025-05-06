@@ -4,7 +4,7 @@ CC		= cc
 
 CFLAGS	= -Wall -Wextra -Werror -g
 
-SRC 	= srcs/main.c srcs/check_ip.c srcs/utils.c srcs/signal.c
+SRC 	= srcs/main.c srcs/check_ip.c srcs/utils.c srcs/signal.c srcs/stats.c
 
 OBJ_DIR = objs
 

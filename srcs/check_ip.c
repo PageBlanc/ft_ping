@@ -19,34 +19,31 @@ int	check_ip(char *ip)
 	i = 0;
 	count_dot = 0;
 	count_num = 0;
-	current_num = malloc(4);
+	current_num = NULL;
 	while (ip[i])
 	{
 		if (isdigit(ip[i]))
-		{
 			count_num++;
-			if (count_num > 3)
-				return (ret_err("Adresse IP invalide", ip, current_num));
-			current_num[count_num - 1] = ip[i];
-		}
 		else if (ip[i] == '.')
 		{
-			current_num[count_num] = '\0';
 			count_dot++;
-			if (count_num < 1 || count_num > 3)
+			current_num = ft_substr(ip, i - count_num, count_num);
+			if (!current_num)
+				return (ret_err("Erreur d'allocation", ip, current_num));
+			if (atoi(current_num) > 255)
 				return (ret_err("Adresse IP invalide", ip, current_num));
-			else if (atoi(current_num) > 255)
-				return (ret_err("Adresse IP invalide", ip, current_num));
-			current_num[0] = '\0';
+			free(current_num);
 			count_num = 0;
 		}
 		else
 			return (ret_err("Adresse IP invalide", ip, current_num));
 		i++;
 	}
+	current_num = ft_substr(ip, i - count_num, count_num);
+	if (!current_num)
+		return (ret_err("Erreur d'allocation", ip, current_num));
 	if ((count_num < 1 || count_num > 3) || count_dot != 3)
 		return (ret_err("Adresse IP invalide", ip, current_num));
-	current_num[count_num] = '\0';
 	if (atoi(current_num) > 255)
 		return (ret_err("Adresse IP invalide", ip, current_num));
 	free(current_num);
