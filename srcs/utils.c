@@ -1,6 +1,5 @@
 #include "../Includes/ping.h"
 
-
 char	*ft_substr(char const *s, unsigned int start, size_t len)
 {
 	unsigned int	i;
@@ -53,26 +52,26 @@ char	*ft_itoa(int n)
 	return (str);
 }
 
-char *ft_strjoin(char *s1, char *s2, int free_s1, int free_s2)
+char	*ft_strjoin(char *s1, char *s2, int free_s1, int free_s2)
 {
+	size_t	len1;
+	size_t	len2;
+	char	*result;
+
+	len1 = strlen(s1);
+	len2 = strlen(s2);
 	if (!s1 || !s2)
-		return NULL;
-
-	size_t len1 = strlen(s1);
-	size_t len2 = strlen(s2);
-	char *result = malloc(len1 + len2 + 1);
-
+		return (NULL);
+	result = malloc((len1 + len2 + 1) * sizeof(char));
 	if (!result)
-		return NULL;
-
+		return (NULL);
 	strcpy(result, s1);
 	strcat(result, s2);
-
 	if (free_s1)
 		free(s1);
 	if (free_s2)
 		free(s2);
-	return result;
+	return (result);
 }
 
 char	*setusable_ip(char *ip)
@@ -135,22 +134,32 @@ void	init_ping_struct(t_ping *ping)
 	ping->arg = NULL;
 	memset(ping->ipstr, 0, INET_ADDRSTRLEN);
 	ping->ip.sin_family = AF_INET;
-	ping->ip.sin_addr.s_addr = 0;	
+	ping->ip.sin_addr.s_addr = 0;
 	ping->seq = 0;
 	ping->pid = getpid();
 	ping->ttl = 56;
 	ping->size = 56;
-	ping->time_of_send = 0;
-	ping->time_of_recv = 0;
-	ping->time_of_wait = 0;
+	ping->time_of_send.tv_sec = 0;
+	ping->time_of_send.tv_usec = 0;
+	ping->time_of_recv.tv_sec = 0;
+	ping->time_of_recv.tv_usec = 0;
 }
 
 void	free_ping_struct(t_ping *ping)
 {
-	if (ping->arg)
+	static t_ping	*ping_static = NULL;
+
+	if (ping)
 	{
-		free(ping->arg);
-		ping->arg = NULL;
+		ping_static = ping;
+		return ;
 	}
-	free(ping);
+	if(!ping_static)
+		return ;
+	if (ping_static->arg)
+	{
+		free(ping_static->arg);
+		ping_static->arg = NULL;
+	}
+	free(ping_static);
 }

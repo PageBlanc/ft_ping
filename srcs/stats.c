@@ -2,32 +2,37 @@
 
 void	set_rtt(t_ping *ping, t_stats *stats)
 {
-	double rtt;
+	double	rtt;
+	double	delta;
 
-	rtt = ((double)(ping->time_of_wait) / CLOCKS_PER_SEC) * 1000;
+	rtt = (ping->time_of_recv.tv_sec - ping->time_of_send.tv_sec) * 1000.0;
+	rtt += (ping->time_of_recv.tv_usec - ping->time_of_send.tv_usec) / 1000.0;
 	if (stats->rtt_min == 0 || rtt < stats->rtt_min)
 		stats->rtt_min = rtt;
 	if (rtt > stats->rtt_max)
 		stats->rtt_max = rtt;
-	stats->rtt_avg += rtt;
-	stats->rtt_mdev += (rtt - stats->rtt_avg) * (rtt - stats->rtt_avg);
+	delta = rtt - stats->rtt_avg;
+	stats->rtt_avg += delta / stats->packets_received;
+	stats->rtt_mdev += delta * (rtt - stats->rtt_avg);
 }
 
 void	print_stats(t_ping *ping, int set)
 {
-	static clock_t start_time = 0;
-	static t_stats stats = {0};
+	static t_stats	stats = {0};
 
 	if (set == 0)
 	{
-		printf("\n--- %s ping statistics ---\n", stats.ip_name);
-		printf("%d packets transmitted, %d received, %d%% packet loss, time %.2f ms\n",
+		printf("--- %s ping statistics ---\n", stats.ip_name);
+		printf("%d packets transmitted, %d packets received, %d%% packet loss\n",
 			stats.packets_sent, stats.packets_received,
-			((stats.packets_sent - stats.packets_received) * 100) / stats.packets_sent,
-			((double)(clock() - start_time) / CLOCKS_PER_SEC) * 1000);
-		printf("rtt min/avg/max/mdev = %.2f/%.2f/%.2f/%.2f ms\n",
-			stats.rtt_min, stats.rtt_avg / stats.packets_received,
-			stats.rtt_max, sqrt((double)(stats.rtt_mdev / stats.packets_received)));
+			((stats.packets_sent - stats.packets_received) * 100) / stats.packets_sent);
+		if (stats.packets_received == 0)
+			return ;
+		stats.rtt_mdev /= stats.packets_received;
+		stats.rtt_mdev = sqrt(stats.rtt_mdev);
+		printf("round-trip min/avg/max/stddev = %.2f/%.2f/%.2f/%.2f ms\n",
+			stats.rtt_min, stats.rtt_avg,
+			stats.rtt_max, stats.rtt_mdev);
 	}
 	else if (set == 1)
 	{
@@ -40,6 +45,4 @@ void	print_stats(t_ping *ping, int set)
 		stats.packets_received++;
 		set_rtt(ping, &stats);
 	}
-	else if (set == 3)
-		start_time = clock();	
 }

@@ -1,6 +1,6 @@
 #include "../Includes/ping.h"
 
-int ft_isalldigit(char *str)
+int	ft_isalldigit(char *str)
 {
 	int	i;
 
@@ -18,23 +18,23 @@ int	set_option(int *option, char **av, int i, int ac)
 {
 	if (ac < i + 1)
 	{
-		printf("ft_ping: option invalide 2: %s\n", av[i]);
+		printf("ft_ping: invalide argument: %s\n", av[i]);
 		return (1);
 	}
+	av++;
 	option[0] = 1;
-	printf("av[i] = %s\n", av[i]);
 	if (ft_isalldigit(av[i]))
 	{
 		option[1] = atoi(av[i]);
 		if (option[1] <= 0)
 		{
-			printf("ft_ping: option invalide 4: %s\n", av[i]);
+			printf("ft_ping: invalide argument: %s\n", av[i]);
 			return (1);
 		}
 	}
 	else
 	{
-		printf("ft_ping: option invalide 3: %s\n", av[i]);
+		printf("ft_ping: invalide argument: %s\n", av[i]);
 		return (1);
 	}
 	return (0);
@@ -52,7 +52,6 @@ int	defined_allarg(t_ping *ping, char **av, int ac)
 		return (1);
 	}
 	memset(ping->arg, 0, sizeof(t_typearg));
-
 	while (av[++i])
 	{
 		if (av[i][0] == '-')
@@ -67,9 +66,9 @@ int	defined_allarg(t_ping *ping, char **av, int ac)
 					return (1);
 				i++;
 			}
-			else if (strcmp(av[i], "-l") == 0)
+			else if (strcmp(av[i], "-i") == 0)
 			{
-				if (set_option(ping->arg->is_l, av, i, ac))
+				if (set_option(ping->arg->is_i, av, i, ac))
 					return (1);
 				i++;
 			}
@@ -98,7 +97,7 @@ int	defined_allarg(t_ping *ping, char **av, int ac)
 				return (1);
 			}
 			else
-				return (printf("ft_ping: option invalide 5: %s\n", av[i]));
+				return (printf("ft_ping: option invalide: %s\n", av[i]));
 		}
 		else
 		{
@@ -114,18 +113,17 @@ int	defined_allarg(t_ping *ping, char **av, int ac)
 	return (0);
 }
 
-void defined_allopt(t_ping *ping)
+int	defined_allopt(t_ping *ping)
 {
+	if (ping->arg->is_f == 1 && ping->arg->is_i[0] == 1)
+		return (printf("ft_ping: option i et f incompatible\n"));
 	if (ping->arg->is_w[0] == 1)
 	{
 		ping->arg->is_w[1] *= 1000;
-	}
-	if (ping->arg->is_l[0] == 1)
-	{
-		ping->arg->is_l[1] *= 1000;
 	}
 	if (ping->arg->is_s[0] == 1)
 	{
 		ping->size = ping->arg->is_s[1];
 	}
+	return (0);
 }

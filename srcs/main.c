@@ -1,7 +1,5 @@
 #include "../Includes/ping.h"
 
-int	g_run = 1;
-
 unsigned	short	checksum(void *b, int len)
 {
 	unsigned short	*buf;
@@ -32,7 +30,7 @@ int	send_icmp(int sockfd, t_ping *ping)
 	icmp->checksum = 0;
 	icmp->checksum = checksum(icmp, sizeof(packet));
 	setsockopt(sockfd, IPPROTO_IP, IP_TTL, &ping->ttl, sizeof(ping->ttl));
-	ping->time_of_send = clock();
+	gettimeofday(&ping->time_of_send, NULL);
 	if (sendto(sockfd, packet, sizeof(packet), 0, (struct sockaddr *) &ping->ip, sizeof(ping->ip)) <= 0)
 	{
 		perror("sendto");
@@ -46,10 +44,10 @@ int	recv_icmp(int sockfd, t_ping *ping)
 {
 	struct msghdr	msg;
 	struct iovec	iov;
-	char			buffer[1024];
-	int				bytes_received;
 	struct iphdr	*ip_header;
 	struct icmphdr	*icmp_header;
+	char			buffer[1024];
+	int				bytes_received;
 
 	iov.iov_base = buffer;
 	iov.iov_len = sizeof(buffer);
@@ -62,8 +60,7 @@ int	recv_icmp(int sockfd, t_ping *ping)
 		perror("recvmsg");
 		return (1);
 	}
-	ping->time_of_recv = clock();
-	ping->time_of_wait = ping->time_of_recv - ping->time_of_send;
+	gettimeofday(&ping->time_of_recv, NULL);
 	print_stats(ping, 2);
 	ip_header = (struct iphdr *) buffer;
 	icmp_header = (struct icmphdr *)(buffer + (ip_header->ihl * 4));
@@ -72,8 +69,10 @@ int	recv_icmp(int sockfd, t_ping *ping)
 		if (icmp_header->un.echo.id == (getpid() & 0xFFFF))
 		{
 			printf("%d bytes from %s: icmp_seq=%d ttl=%d time=%.2f ms\n",
-				bytes_received, ping->ipstr, icmp_header->un.echo.sequence,
-				ping->ttl, ((double)(ping->time_of_wait) / CLOCKS_PER_SEC) * 1000);
+				bytes_received - 12, inet_ntoa(ping->ip.sin_addr),
+				icmp_header->un.echo.sequence, ping->ttl,
+				((ping->time_of_recv.tv_sec - ping->time_of_send.tv_sec) * 1000.0 +
+				(ping->time_of_recv.tv_usec - ping->time_of_send.tv_usec) / 1000.0));
 		}
 		else
 			printf("ICMP ECHO REPLY from %s: icmp_seq=%d\n", ping->ipstr, icmp_header->un.echo.sequence);
@@ -85,28 +84,31 @@ int	recv_icmp(int sockfd, t_ping *ping)
 
 int	main(int ac, char **av)
 {
-	t_ping	*ping;
 	struct addrinfo	hints;
 	struct addrinfo	*res;
-	int		sockfd;
+	t_ping			*ping;
+	int				sockfd;
 
 	if (ac < 2)
 		return (printf("ft_ping: usage error: Adresse de destination requise\n"));
-
-	ping = malloc(sizeof(t_ping));
+	ping = calloc(sizeof(t_ping), sizeof(t_ping));
 	if (!ping)
 	{
 		perror("malloc");
 		return (1);
 	}
-	memset(ping, 0, sizeof(t_ping));
 	init_ping_struct(ping);
+	free_ping_struct(ping);
 	if (defined_allarg(ping, av, ac))
 	{
-		free_ping_struct(ping);
+		free_ping_struct(NULL);
 		return (1);
 	}
-	defined_allopt(ping);
+	if (defined_allopt(ping))
+	{
+		free_ping_struct(NULL);
+		return (1);
+	}
 	if (inet_pton(AF_INET, ping->ipstr, &ping->ip.sin_addr) <= 0)
 	{
 		memset(&hints, 0, sizeof(hints));
@@ -115,38 +117,39 @@ int	main(int ac, char **av)
 		if (getaddrinfo(ping->ipstr, NULL, &hints, &res) != 0)
 		{
 			printf("ft_ping: %s: Unknown host\n", ping->ipstr);
-			free_ping_struct(ping);
+			free_ping_struct(NULL);
 			return (1);
 		}
 		memcpy(&ping->ip.sin_addr, &((struct sockaddr_in *)res->ai_addr)->sin_addr, sizeof(struct in_addr));
 		freeaddrinfo(res);
 	}
-
 	sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
 	if (sockfd < 0)
 	{
-		free_ping_struct(ping);
+		free_ping_struct(NULL);
 		perror("socket");
 		return (1);
 	}
-
-	printf("PING %s (%s) %d bytes of data\n", ping->ipstr, ping->ipstr, ping->size);
+	printf("FT_PING %s (%s) %d data bytes", ping->ipstr, inet_ntoa(ping->ip.sin_addr), ping->size);
+	if (ping->arg->is_v)
+		printf(", id %p = %d\n", &ping->pid, ping->pid);
+	else
+		printf("\n");
 	signal_handler();
-	print_stats(ping, 3);
-	while (g_run)
+	while (1)
 	{
+		if (send_icmp(sockfd, ping))
+			break ;
+		if (recv_icmp(sockfd, ping))
+			break ;
 		if (ping->arg->is_c[0] > 0 && ping->arg->is_c[1] == ping->seq)
 		{
 			print_stats(ping, 0);
-			break;
+			break ;
 		}
-		if (send_icmp(sockfd, ping))
-			break;
-		if (recv_icmp(sockfd, ping))
-			break;
-		sleep(1);
+		sleep(ping->arg->is_i[1]);
 	}
 	close(sockfd);
-	free_ping_struct(ping);
+	free_ping_struct(NULL);
 	return (0);
 }
