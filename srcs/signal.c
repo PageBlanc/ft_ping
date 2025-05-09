@@ -10,5 +10,6 @@ void	handler(int signum)
 
 void	signal_handler(void)
 {
+	signal(SIGALRM, handler);
 	signal(SIGINT, handler);
 }

@@ -39,6 +39,8 @@ typedef struct s_ping
 	int					size;
 	struct timeval		time_of_send;
 	struct timeval		time_of_recv;
+	struct timeval		program_start;
+	struct timeval		program_end;
 }	t_ping;
 
 typedef struct s_stats

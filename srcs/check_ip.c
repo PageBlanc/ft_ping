@@ -107,7 +107,7 @@ int	defined_allarg(t_ping *ping, char **av, int ac)
 				ping->ipstr[INET_ADDRSTRLEN - 1] = '\0';
 			}
 			else
-				return (printf("ft_ping: option invalide 6: %s\n", av[i]));
+				return (printf("ft_ping: option invalide : %s\n", av[i]));
 		}
 	}
 	return (0);
@@ -117,13 +117,11 @@ int	defined_allopt(t_ping *ping)
 {
 	if (ping->arg->is_f == 1 && ping->arg->is_i[0] == 1)
 		return (printf("ft_ping: option i et f incompatible\n"));
-	if (ping->arg->is_w[0] == 1)
-	{
-		ping->arg->is_w[1] *= 1000;
-	}
+	if (!ping->arg->is_i[0])
+		ping->arg->is_i[1] = 1;
+	if (ping->arg->is_f == 1)
+		print_stats(ping, 3);
 	if (ping->arg->is_s[0] == 1)
-	{
 		ping->size = ping->arg->is_s[1];
-	}
 	return (0);
 }

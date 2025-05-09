@@ -19,9 +19,15 @@ void	set_rtt(t_ping *ping, t_stats *stats)
 void	print_stats(t_ping *ping, int set)
 {
 	static t_stats	stats = {0};
+	static int		flood = 0;
 
 	if (set == 0)
 	{
+		if (flood == 1)
+		{
+			for (int i = 0; i < stats.packets_sent - stats.packets_received; i++)
+				write(1, ".", 1);
+		}
 		printf("--- %s ping statistics ---\n", stats.ip_name);
 		printf("%d packets transmitted, %d packets received, %d%% packet loss\n",
 			stats.packets_sent, stats.packets_received,
@@ -45,4 +51,6 @@ void	print_stats(t_ping *ping, int set)
 		stats.packets_received++;
 		set_rtt(ping, &stats);
 	}
+	else if (set == 3)
+		flood = 1;
 }

@@ -68,6 +68,8 @@ int	recv_icmp(int sockfd, t_ping *ping)
 	{
 		if (icmp_header->un.echo.id == (getpid() & 0xFFFF))
 		{
+			if (ping->arg->is_f)
+				return (0);
 			printf("%d bytes from %s: icmp_seq=%d ttl=%d time=%.2f ms\n",
 				bytes_received - 12, inet_ntoa(ping->ip.sin_addr),
 				icmp_header->un.echo.sequence, ping->ttl,
@@ -130,23 +132,28 @@ int	main(int ac, char **av)
 		perror("socket");
 		return (1);
 	}
+	signal_handler();
 	printf("FT_PING %s (%s) %d data bytes", ping->ipstr, inet_ntoa(ping->ip.sin_addr), ping->size);
+	if (ping->arg->is_w[0] > 0)
+		alarm(ping->arg->is_w[1]);
 	if (ping->arg->is_v)
-		printf(", id %p = %d\n", &ping->pid, ping->pid);
+	printf(", id %p = %d\n", &ping->pid, ping->pid);
 	else
 		printf("\n");
-	signal_handler();
 	while (1)
 	{
 		if (send_icmp(sockfd, ping))
 			break ;
 		if (recv_icmp(sockfd, ping))
 			break ;
+		gettimeofday(&ping->program_end, NULL);
 		if (ping->arg->is_c[0] > 0 && ping->arg->is_c[1] == ping->seq)
 		{
 			print_stats(ping, 0);
 			break ;
 		}
+		if (ping->arg->is_f)
+			continue ;
 		sleep(ping->arg->is_i[1]);
 	}
 	close(sockfd);

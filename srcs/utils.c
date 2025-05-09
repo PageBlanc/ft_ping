@@ -143,6 +143,10 @@ void	init_ping_struct(t_ping *ping)
 	ping->time_of_send.tv_usec = 0;
 	ping->time_of_recv.tv_sec = 0;
 	ping->time_of_recv.tv_usec = 0;
+	ping->program_start.tv_sec = 0;
+	ping->program_start.tv_usec = 0;
+	ping->program_end.tv_sec = 0;
+	ping->program_end.tv_usec = 0;
 }
 
 void	free_ping_struct(t_ping *ping)
