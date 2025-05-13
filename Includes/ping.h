@@ -60,7 +60,7 @@ void	signal_handler(void);
 void	print_stats(t_ping *ping, int set);
 void	free_ping_struct(t_ping *ping);
 int		defined_allarg(t_ping *ping, char **av, int ac);
-int	defined_allopt(t_ping *ping);
+int		defined_allopt(t_ping *ping);
 char	*ft_itoa(int n);
 
 #endif

@@ -72,7 +72,7 @@ int	recv_icmp(int sockfd, t_ping *ping)
 				return (0);
 			printf("%d bytes from %s: icmp_seq=%d ttl=%d time=%.2f ms\n",
 				bytes_received - 12, inet_ntoa(ping->ip.sin_addr),
-				icmp_header->un.echo.sequence, ping->ttl,
+				icmp_header->un.echo.sequence, ip_header->ttl,
 				((ping->time_of_recv.tv_sec - ping->time_of_send.tv_sec) * 1000.0 +
 				(ping->time_of_recv.tv_usec - ping->time_of_send.tv_usec) / 1000.0));
 		}
