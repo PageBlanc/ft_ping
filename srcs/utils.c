@@ -1,32 +1,5 @@
 #include "../Includes/ping.h"
 
-char	*ft_substr(char const *s, unsigned int start, size_t len)
-{
-	unsigned int	i;
-	int				total_len;
-	char			*str;
-
-	i = 0;
-	if (!s)
-		return (0);
-	if (start > strlen(s))
-		len = 0;
-	if (strlen(s) <= len)
-		total_len = strlen(s) - start + 1;
-	else
-		total_len = len + 1;
-	str = malloc(total_len * sizeof(char));
-	if (str == NULL)
-		return (NULL);
-	while (i < len && s[i + start])
-	{
-		str[i] = s[start + i];
-		i++;
-	}
-	str[i] = 0;
-	return (str);
-}
-
 char	*ft_itoa(int n)
 {
 	char	*str;
@@ -137,7 +110,7 @@ void	init_ping_struct(t_ping *ping)
 	ping->ip.sin_addr.s_addr = 0;
 	ping->seq = 0;
 	ping->pid = getpid();
-	ping->ttl = 56;
+	ping->ttl = 64;
 	ping->size = 56;
 	ping->time_of_send.tv_sec = 0;
 	ping->time_of_send.tv_usec = 0;
@@ -165,5 +138,6 @@ void	free_ping_struct(t_ping *ping)
 		free(ping_static->arg);
 		ping_static->arg = NULL;
 	}
+	close(ping_static->sockfd);
 	free(ping_static);
 }

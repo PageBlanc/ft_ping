@@ -89,7 +89,6 @@ int	main(int ac, char **av)
 	struct addrinfo	hints;
 	struct addrinfo	*res;
 	t_ping			*ping;
-	int				sockfd;
 
 	if (ac < 2)
 		return (printf("ft_ping: usage error: Adresse de destination requise\n"));
@@ -125,8 +124,8 @@ int	main(int ac, char **av)
 		memcpy(&ping->ip.sin_addr, &((struct sockaddr_in *)res->ai_addr)->sin_addr, sizeof(struct in_addr));
 		freeaddrinfo(res);
 	}
-	sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
-	if (sockfd < 0)
+	ping->sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
+	if (ping->sockfd < 0)
 	{
 		free_ping_struct(NULL);
 		perror("socket");
@@ -142,9 +141,9 @@ int	main(int ac, char **av)
 		printf("\n");
 	while (1)
 	{
-		if (send_icmp(sockfd, ping))
+		if (send_icmp(ping->sockfd, ping))
 			break ;
-		if (recv_icmp(sockfd, ping))
+		if (recv_icmp(ping->sockfd, ping))
 			break ;
 		gettimeofday(&ping->program_end, NULL);
 		if (ping->arg->is_c[0] > 0 && ping->arg->is_c[1] == ping->seq)
@@ -156,7 +155,6 @@ int	main(int ac, char **av)
 			continue ;
 		sleep(ping->arg->is_i[1]);
 	}
-	close(sockfd);
 	free_ping_struct(NULL);
 	return (0);
 }

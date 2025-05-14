@@ -84,16 +84,16 @@ int	defined_allarg(t_ping *ping, char **av, int ac)
 					return (1);
 				i++;
 			}
-			else if (strcmp(av[i], "-h") == 0)
+			else if (strcmp(av[i], "-h") == 0 || strcmp(av[i], "-?") == 0)
 			{
 				printf("Usage: ft_ping [options] <destination>\n");
 				printf("Options:\n");
-				printf("  -v\tVerbose mode\n");
-				printf("  -f\tFlood mode\n");
+				printf("  -v\tVerbose output\n");
+				printf("  -f\tFlood ping\n");
 				printf("  -w\tDeadline in seconds\n");
-				printf("  -l\tPreload size of packets\n");
+				printf("  -i\tSet an Interval between each packet\n");
 				printf("  -s\tSize of packets\n");
-				printf("  -c\tTotal packets to send\n");
+				printf("  -c\tStop after sending a NUMBER of packets\n");
 				return (1);
 			}
 			else
@@ -116,7 +116,7 @@ int	defined_allarg(t_ping *ping, char **av, int ac)
 int	defined_allopt(t_ping *ping)
 {
 	if (ping->arg->is_f == 1 && ping->arg->is_i[0] == 1)
-		return (printf("ft_ping: option i et f incompatible\n"));
+		return (printf("ft_ping: options i et f incompatible\n"));
 	if (!ping->arg->is_i[0])
 		ping->arg->is_i[1] = 1;
 	if (ping->arg->is_f == 1)

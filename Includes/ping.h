@@ -33,8 +33,9 @@ typedef struct s_ping
 	char				ipstr[INET_ADDRSTRLEN];
 	struct sockaddr_in	ip;
 	t_typearg			*arg;
-	int					seq;
 	pid_t				pid;
+	int					seq;
+	int					sockfd;
 	int					ttl;
 	int					size;
 	struct timeval		time_of_send;
@@ -55,7 +56,6 @@ typedef struct s_stats
 }	t_stats;
 
 void	init_ping_struct(t_ping *ping);
-char	*ft_substr(char const *s, unsigned int start, size_t len);
 void	signal_handler(void);
 void	print_stats(t_ping *ping, int set);
 void	free_ping_struct(t_ping *ping);
