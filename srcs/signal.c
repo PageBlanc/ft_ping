@@ -4,8 +4,7 @@ void	handler(int signum)
 {
 	if (signum == 2 || signum == 14)
 		print_stats(NULL, 0);
-	free_ping_struct(NULL);
-	exit(0);
+	exit(free_ping_struct(NULL, 0));
 }
 
 void	signal_handler(void)

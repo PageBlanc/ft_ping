@@ -26,6 +26,7 @@ typedef struct s_typearg
 	int		is_c[2]; // total packets
 	int		is_i[2]; // preload size of packets
 	int		is_s[2]; // size of packets
+	int		is_ttl[2]; // set the TTL
 }	t_typearg;
 
 typedef struct s_ping
@@ -55,12 +56,13 @@ typedef struct s_stats
 	double	rtt_mdev;
 }	t_stats;
 
+void	print_stats(t_ping *ping, int set);
 void	init_ping_struct(t_ping *ping);
 void	signal_handler(void);
-void	print_stats(t_ping *ping, int set);
-void	free_ping_struct(t_ping *ping);
 int		defined_allarg(t_ping *ping, char **av, int ac);
+int		free_ping_struct(t_ping *ping, int exit_code);
+int		recv_icmp(int sockfd, t_ping *ping);
 int		defined_allopt(t_ping *ping);
-char	*ft_itoa(int n);
+int		checkip(t_ping *ping);
 
 #endif
