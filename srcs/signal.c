@@ -3,7 +3,7 @@
 void	handler(int signum)
 {
 	if (signum == 2 || signum == 14)
-		print_stats(NULL, 0);
+		print_stats(NULL, PRINT);
 	exit(free_ping_struct(NULL, 0));
 }
 

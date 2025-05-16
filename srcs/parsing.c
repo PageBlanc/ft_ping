@@ -119,7 +119,7 @@ int	defined_allopt(t_ping *ping)
 	if (!ping->arg->is_i[0])
 		ping->arg->is_i[1] = 1;
 	if (ping->arg->is_f == 1)
-		print_stats(ping, 3);
+		print_stats(ping, 4);
 	if (ping->arg->is_s[0] == 1)
 		ping->size = ping->arg->is_s[1];
 	if (ping->arg->is_ttl[0] == 1)

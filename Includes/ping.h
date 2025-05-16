@@ -18,6 +18,12 @@
 # include <errno.h>
 # include <math.h>
 
+// define Statistics
+# define PRINT					0
+# define ADD_SENDPACKETS		1
+# define ADD_RECVPACKETS		2
+# define SUB_RECVPACKETS		3
+
 typedef struct s_typearg
 {
 	int		is_v;  // verbose mode

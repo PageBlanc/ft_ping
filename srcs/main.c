@@ -36,7 +36,7 @@ int	send_icmp(int sockfd, t_ping *ping)
 		perror("sendto");
 		return (1);
 	}
-	print_stats(ping, 1);
+	print_stats(ping, ADD_SENDPACKETS);
 	return (0);
 }
 
@@ -51,17 +51,16 @@ void	pingloop(t_ping *ping)
 		ret = recv_icmp(ping->sockfd, ping);
 		if (ret < 0)
 			break ;
+		gettimeofday(&ping->program_end, NULL);
 		if (ret == 0)
 			continue ;
-		gettimeofday(&ping->program_end, NULL);
 		if (ping->arg->is_c[0] > 0 && ping->arg->is_c[1] == ping->seq)
 		{
-			print_stats(ping, 0);
+			print_stats(ping, PRINT);
 			break ;
 		}
-		if (ping->arg->is_f)
-			continue ;
-		sleep(ping->arg->is_i[1]);
+		if (!ping->arg->is_f)
+			sleep(ping->arg->is_i[1]);
 	}
 }
 
