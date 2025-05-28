@@ -52,15 +52,18 @@ void	pingloop(t_ping *ping)
 		if (ret < 0)
 			break ;
 		gettimeofday(&ping->program_end, NULL);
-		if (ret == 0)
-			continue ;
 		if (ping->arg->is_c[0] > 0 && ping->arg->is_c[1] == ping->seq)
 		{
 			print_stats(ping, PRINT);
 			break ;
 		}
 		if (!ping->arg->is_f)
-			sleep(ping->arg->is_i[1]);
+		{
+			if (ping->arg->is_w[0] > 0)
+				usleep(750000);
+			else
+				sleep(ping->arg->is_i[1]);
+		}
 	}
 }
 

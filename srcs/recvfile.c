@@ -145,6 +145,12 @@ int	recv_icmp(int sockfd, t_ping *ping)
 		timeout.tv_sec = 0;
 		timeout.tv_usec = 200;
 	}
+	else if (ping->arg->is_w[0] > 0)
+	{
+		// Avec deadline (-w), on utilise un timeout plus court pour permettre plus de paquets
+		timeout.tv_sec = 0;
+		timeout.tv_usec = 10000; // 10ms
+	}
 	else
 	{
 		timeout.tv_sec = ping->arg->is_i[1];
