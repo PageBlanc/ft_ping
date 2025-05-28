@@ -24,6 +24,10 @@
 # define ADD_RECVPACKETS		2
 # define SUB_RECVPACKETS		3
 
+#ifndef NI_MAXHOST
+#define NI_MAXHOST 1025
+#endif
+
 typedef struct s_typearg
 {
 	int		is_v;  // verbose mode

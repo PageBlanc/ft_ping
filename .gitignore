@@ -2,3 +2,4 @@ objs/*.o
 *.o
 ft_ping
 .vscode
+inetutils-2.0/*
