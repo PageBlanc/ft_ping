@@ -26,7 +26,7 @@ int	send_icmp(int sockfd, t_ping *ping)
 	icmp->type = ICMP_ECHO;
 	icmp->code = 0;
 	icmp->un.echo.id = getpid() & 0xFFFF;
-	icmp->un.echo.sequence = ping->seq++;
+	icmp->un.echo.sequence = htons(ping->seq++);
 	icmp->checksum = 0;
 	icmp->checksum = checksum(icmp, sizeof(packet));
 	setsockopt(sockfd, IPPROTO_IP, IP_TTL, &ping->ttl, sizeof(ping->ttl));
@@ -43,16 +43,18 @@ int	send_icmp(int sockfd, t_ping *ping)
 void	pingloop(t_ping *ping)
 {
 	int	ret;
+	int	packets_sent = 0;
 
 	while (1)
 	{
 		if (send_icmp(ping->sockfd, ping))
 			break ;
+		packets_sent++;
 		ret = recv_icmp(ping->sockfd, ping);
 		if (ret < 0)
 			break ;
 		gettimeofday(&ping->program_end, NULL);
-		if (ping->arg->is_c[0] > 0 && ping->arg->is_c[1] == ping->seq)
+		if (ping->arg->is_c[0] > 0 && ping->arg->is_c[1] == packets_sent)
 		{
 			print_stats(ping, PRINT);
 			break ;

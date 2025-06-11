@@ -71,12 +71,6 @@ void	print_error(int bytes_received, t_ping *ping, struct icmphdr *icmp_header, 
 		case ICMP_DEST_UNREACH:
 		printf("%d bytes from %s: Destination unreachable\n", bytes_received, inet_ntoa(ping->ip.sin_addr));
 		break ;
-		case ICMP_ECHO:
-		printf("%d bytes from %s: Echo request\n", bytes_received, inet_ntoa(ping->ip.sin_addr));
-		break ;
-		case ICMP_ECHOREPLY:
-		printf("%d bytes from %s: Echo reply\n", bytes_received, inet_ntoa(ping->ip.sin_addr));
-		break ;
 		default:
 		printf("%d bytes from %s: Unknown ICMP type %d\n", bytes_received, inet_ntoa(ping->ip.sin_addr), icmp_header->type);
 		break ;
@@ -111,22 +105,45 @@ int recv_timeout(int sockfd, t_ping *ping)
 		return (-1);
 	}
 	gettimeofday(&ping->time_of_recv, NULL);
-	print_stats(ping, ADD_RECVPACKETS);
 	ip_header = (struct iphdr *) buffer;
 	icmp_header = (struct icmphdr *)(buffer + (ip_header->ihl * 4));
+	
 	if (icmp_header->type == ICMP_ECHOREPLY)
 	{
 		if (icmp_header->un.echo.id == (getpid() & 0xFFFF))
 		{
-			if (ping->arg->is_f)
-				return (0);
-			printf("%d bytes from %s: icmp_seq=%d ttl=%d time=%.2f ms\n", bytes_received - 20, inet_ntoa(ping->ip.sin_addr), icmp_header->un.echo.sequence, ip_header->ttl, ((ping->time_of_recv.tv_sec - ping->time_of_send.tv_sec) * 1000.0 + (ping->time_of_recv.tv_usec - ping->time_of_send.tv_usec) / 1000.0));
+			print_stats(ping, ADD_RECVPACKETS);
+			if (!ping->arg->is_f)
+			{
+				printf("%d bytes from %s: icmp_seq=%d ttl=%d time=%.2f ms\n", 
+					bytes_received - 12, inet_ntoa(ping->ip.sin_addr), 
+					ntohs(icmp_header->un.echo.sequence), ip_header->ttl, 
+					((ping->time_of_recv.tv_sec - ping->time_of_send.tv_sec) * 1000.0 + 
+					(ping->time_of_recv.tv_usec - ping->time_of_send.tv_usec) / 1000.0));
+			}
+			if (ping->arg->is_v)
+				print_verbose_data(ping, bytes_received, icmp_header, ip_header, &src_addr, buffer);
+			return (bytes_received);
 		}
 		else
-			print_error(bytes_received, ping, icmp_header, &src_addr, ip_header, buffer);
+		{
+			return (0); // Continue à chercher
+		}
+	}
+	else if (icmp_header->type == ICMP_TIME_EXCEEDED || icmp_header->type == ICMP_DEST_UNREACH)
+	{
+		print_error(bytes_received, ping, icmp_header, &src_addr, ip_header, buffer);
+		return (bytes_received);
+	}
+	else if (icmp_header->type == ICMP_ECHO)
+	{
+		// Ignorer nos propres requêtes ECHO
+		return (0); // Continue à chercher
 	}
 	else
-		print_error(bytes_received, ping, icmp_header, &src_addr, ip_header, buffer);
+	{
+		return (0); // Continue à chercher
+	}
 	return (bytes_received);
 }
 
@@ -136,42 +153,50 @@ int	recv_icmp(int sockfd, t_ping *ping)
 	struct timeval		timeout;
 	int					ret;
 	int					bytes_received;
+	int					attempts = 0;
+	const int			max_attempts = 10;
 
-	FD_ZERO(&read_fds);
-	FD_SET(sockfd, &read_fds);
+	while (attempts < max_attempts)
+	{
+		FD_ZERO(&read_fds);
+		FD_SET(sockfd, &read_fds);
 
-	if (ping->arg->is_f)
-	{
-		timeout.tv_sec = 0;
-		timeout.tv_usec = 200;
-	}
-	else if (ping->arg->is_w[0] > 0)
-	{
-		// Avec deadline (-w), on utilise un timeout plus court pour permettre plus de paquets
-		timeout.tv_sec = 0;
-		timeout.tv_usec = 10000; // 10ms
-	}
-	else
-	{
-		timeout.tv_sec = ping->arg->is_i[1];
-		timeout.tv_usec = 0;
-	}
+		if (ping->arg->is_f)
+		{
+			timeout.tv_sec = 0;
+			timeout.tv_usec = 200000; // 200ms
+		}
+		else if (ping->arg->is_w[0] > 0)
+		{
+			timeout.tv_sec = 0;
+			timeout.tv_usec = 100000; // 100ms
+		}
+		else
+		{
+			timeout.tv_sec = 1; // 1 seconde max par tentative
+			timeout.tv_usec = 0;
+		}
 
-	ret = select(sockfd + 1, &read_fds, NULL, NULL, &timeout);
-	if (ret == -1)
-	{
-		perror("select");
-		return (-1);
-	}
-	else if (ret == 0)
-		return (0);
-	else
-	{
-		bytes_received = recv_timeout(sockfd, ping);
-		if (bytes_received < 0)
+		ret = select(sockfd + 1, &read_fds, NULL, NULL, &timeout);
+		if (ret == -1)
+		{
+			perror("select");
 			return (-1);
-		else if (bytes_received == 0)
+		}
+		else if (ret == 0)
+		{
+			// Timeout - on n'a pas reçu de réponse
 			return (0);
+		}
+		else
+		{
+			bytes_received = recv_timeout(sockfd, ping);
+			if (bytes_received < 0)
+				return (-1);
+			else if (bytes_received > 0)
+				return (bytes_received);
+		}
+		attempts++;
 	}
-	return (bytes_received);
+	return (0);
 }
